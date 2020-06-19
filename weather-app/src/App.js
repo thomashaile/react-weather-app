@@ -1,8 +1,8 @@
-import React from 'react';
-import './App.css';
-import 'weather-icons/css/weather-icons.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import Weather from './app_component/weather.component';
+import React from "react";
+import "./App.css";
+import Form from "./app_component/form.component";
+import Weather from "./app_component/weather.component";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 // git project https://github.com/erikflowers/weather-icons
 import "weather-icons/css/weather-icons.css";
@@ -23,7 +23,7 @@ class App extends React.Component {
             description: "",
             error: false
         };
-        this.getWeather();
+
         this.weatherIcon = {
             Thunderstorm: "wi-thunderstorm",
             Drizzle: "wi-sleet",
@@ -34,10 +34,7 @@ class App extends React.Component {
             Clouds: "wi-day-fog"
         };
     }
-    calCelsius(temp) {
-        let cell = Math.floor(temp - 273.15);
-        return cell;
-    }
+
     get_WeatherIcon(icons, rangeId) {
         switch (true) {
             case rangeId >= 200 && rangeId < 232:
@@ -66,36 +63,61 @@ class App extends React.Component {
         }
     }
 
-    getWeather = async() => {
-        const api_call = await fetch(
-            `http://api.openweathermap.org/data/2.5/weather?q=London,uk&appid=${Api_Key}`
-        );
-        const response = await api_call.json();
-        console.log(response);
-        this.setState({
-            city: response.name,
-            country: response.sys.country,
-            main: response.weather[0].main,
-            celsius: this.calCelsius(response.main.temp),
-            temp_max: this.calCelsius(response.main.temp_max),
-            temp_min: this.calCelsius(response.main.temp_min),
-            description: response.weather[0].description
-        });
-        this.get_WeatherIcon(this.weatherIcon, response.weather[0].id);
+    calCelsius(temp) {
+        let cell = Math.floor(temp - 273.15);
+        return cell;
     }
+
+    getWeather = async e => {
+        e.preventDefault();
+
+        const country = e.target.elements.country.value;
+        const city = e.target.elements.city.value;
+
+        if (country && city) {
+            const api_call = await fetch(
+                `http://api.openweathermap.org/data/2.5/weather?q=${city},${country}&appid=${Api_Key}`
+            );
+
+            const response = await api_call.json();
+
+            this.setState({
+                city: `${response.name}, ${response.sys.country}`,
+                country: response.sys.country,
+                main: response.weather[0].main,
+                celsius: this.calCelsius(response.main.temp),
+                temp_max: this.calCelsius(response.main.temp_max),
+                temp_min: this.calCelsius(response.main.temp_min),
+                description: response.weather[0].description,
+                error: false
+            });
+
+            // seting icons
+            this.get_WeatherIcon(this.weatherIcon, response.weather[0].id);
+
+            console.log(response);
+        } else {
+            this.setState({
+                error: true
+            });
+        }
+    };
+
     render() {
         return ( <
             div className = "App" >
             <
-            Weather city = { this.state.city }
-            country = { this.state.country }
+            Form loadweather = { this.getWeather }
+            error = { this.state.error }
+            /> <
+            Weather cityname = { this.state.city }
+            weatherIcon = { this.state.icon }
             temp_celsius = { this.state.celsius }
             temp_max = { this.state.temp_max }
             temp_min = { this.state.temp_min }
             description = { this.state.description }
-            weatherIcon = { this.state.icon }
-            / > < /
-            div >
+            /> <
+            /div>
         );
     }
 }
